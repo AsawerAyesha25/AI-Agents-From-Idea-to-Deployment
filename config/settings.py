@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing helpers only
 # Ensure environment variables from a local .env file are available during development.
 load_dotenv()
 
-MODEL_NAME = "meta-llama/llama-3.3-70b-instruct:free"
+MODEL_NAME = "mistralai/mistral-large"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_DEFAULT_HEADERS = {
     "HTTP-Referer": "https://github.com/your-org/agentic-workshop",
@@ -126,6 +126,7 @@ def build_crewai_llm(**overrides: Any) -> LLM:
         "api_base": base_url,
         "custom_llm_provider": "openrouter",
         "extra_headers": extra_headers,
+        "request_timeout": overrides.get("request_timeout", 120),
     }
 
     if provider_override:

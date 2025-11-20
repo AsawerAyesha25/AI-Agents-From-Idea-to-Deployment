@@ -1,93 +1,93 @@
-#"""Task definitions for the Agentic AI Workshop crew."""
+"""Task definitions for the Finance Focus crew."""
 from __future__ import annotations
 
 from typing import List
 
 from crewai import Task
+from tools import create_calculator_tool, create_rag_tool, create_web_search_tool # Unused imports removed
 
-from tools import create_calculator_tool, create_rag_tool, create_web_search_tool
 
-
-def create_planning_task(agent) -> Task:
-    """Task 1 placeholder: draft an execution plan."""
+def create_research_task(agent, topic: str) -> Task:
+    """Task 1: Market Research to gather raw data and news."""
     return Task(
         description=(
-            "Add description for Task 1."
-            # "Analyze the workshop topic '{topic}' and craft a milestone-based execution plan. "
-            # "List required assets, responsible roles, tooling, and a realistic timeline."
+            f"Conduct comprehensive research on the stock ticker **{topic}**. "
+            "Gather the current stock price, recent news drivers (last 7 days), and key financial figures "
+            "from the latest earnings report (Revenue, EPS, and forward guidance)."
         ),
         expected_output=(
-            "Add expected output for Task 1."
-            # "A structured plan including objectives, three to five milestones, resource requirements, "
-            # "risk mitigation ideas, and success metrics."
+            "A raw data report containing the ticker, current price, a list of 3-5 key news headlines/summaries, "
+            "and all relevant financial data points for the analyst to use."
         ),
         agent=agent,
-        name="Task 1",  # "Planning"
+        name="Market Research",
     )
 
 
-def create_research_task(agent, tools=None) -> Task:
-    """Task 2 placeholder: gather supporting research."""
-    tools = list(tools) if tools is not None else [
-        create_rag_tool(),
-        create_web_search_tool(),
-        create_calculator_tool(),
-    ]
+def create_analysis_task(agent) -> Task:
+    """Task 2: Data Analysis to calculate metrics and provide a score."""
     return Task(
         description=(
-            "Add description for Task 2."
-            # "Use the local knowledge base and live web results to validate the plan for '{topic}'. "
-            # "Cite at least three trustworthy sources and capture data points that justify each milestone."
+            "Analyze the raw data provided. Use the calculator tool to compute derived metrics like "
+            "P/E ratio (if data is available), Year-over-Year (YoY) change from the 52-week high, and a "
+            "formal investment recommendation score (1-10) with justification."
         ),
         expected_output=(
-            "Add expected output for Task 2."
-            # "A bullet list of insights with inline citations, key statistics, and references to the RAG documents."
+            "A structured report containing all calculated metrics, a clear Bullish/Bearish/Neutral stance, "
+            "and the final, numerical Recommendation Score (e.g., Score: 8/10, Stance: Bullish)."
         ),
         agent=agent,
-        tools=tools,
-        name="Task 2",  # "Research"
+        name="Financial Data Analysis",
     )
 
 
 def create_writing_task(agent) -> Task:
-    """Task 3 placeholder: author deliverables."""
+    """Task 3: Report Writing to author the investment brief."""
     return Task(
         description=(
-            "Add description for Task 3."
-            # "Draft the workshop narrative for '{topic}', including an overview, prerequisites, step-by-step labs, and deployment notes. "
-            # "Incorporate the research insights and calculator results where helpful."
+            "Draft a professional Investment Brief based on the Data Analyst's structured report. "
+            "The brief must include sections for 'Executive Summary', 'Key Metrics & Analysis' (using the calculated metrics), "
+            "and 'Recent Market Drivers' (incorporating the researcher's news). "
+            "Maintain a formal, professional tone."
         ),
         expected_output=(
-            "Add expected output for Task 3."
-            # "A Markdown-formatted workshop guide with sections for Goals, Agenda, Hands-on Labs, Deployment, and Resources."
+            "A complete, professional Markdown-formatted Investment Brief ready for compliance review."
         ),
         agent=agent,
-        name="Task 3",  # "Writing"
+        name="Investment Brief Drafting",
     )
 
 
 def create_review_task(agent) -> Task:
-    """Task 4 placeholder: review compiled deliverables."""
+    """Task 4: Compliance Review for accuracy and adherence."""
     return Task(
         description=(
-            "Add description for Task 4."
-            # "Review the draft content for '{topic}' for accuracy, completeness, and pedagogy. Provide an executive summary of strengths, "
-            # "list gaps or issues, and suggest concrete improvements."
+            "Review the drafted Investment Brief for accuracy, compliance risk, and quality. "
+            "You MUST use the calculator tool to double-check all presented financial metrics against the initial raw data. "
+            "Identify any non-compliant language (e.g., guarantees, speculation) and factual errors."
         ),
         expected_output=(
-            "Add expected output for Task 4."
-            # "A review report with sections for Summary, Major Findings, Minor Suggestions, and Final Recommendation."
+            "A review report with sections for Summary, Major Findings, Minor Suggestions, and a Final Recommendation: "
+            "either 'SIGN-OFF: Approved' or an 'Actionable Critique' listing required revisions."
         ),
         agent=agent,
-        name="Task 4",  # "Reviewing"
+        name="Compliance Review",
+        
     )
 
 
-def build_workshop_tasks(planner, researcher, writer, reviewer, research_tools=None) -> List[Task]:
-    """Convenience helper to create the full task list order."""
-    return [
-        create_planning_task(planner),
-        create_research_task(researcher, tools=research_tools),
-        create_writing_task(writer),
-        create_review_task(reviewer),
-    ]
+def build_finance_tasks(researcher, analyst, writer, reviewer, topic: str) -> List[Task]:
+    """Convenience helper to create the full sequential task list for the finance crew."""
+    
+    # Define tasks
+    t1 = create_research_task(researcher, topic)
+    t2 = create_analysis_task(analyst)
+    t3 = create_writing_task(writer)
+    t4 = create_review_task(reviewer)
+    
+    # Set context (dependencies)
+    t2.context = [t1]
+    t3.context = [t2]
+    t4.context = [t3]
+    
+    return [t1, t2, t3, t4]
